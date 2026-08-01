@@ -16,14 +16,16 @@ from .exceptions import (
     ScanDriverError,
     ScannerError,
     ValidationError,
+    UnsupportedPixelFormatError,
 )
-from .images import Image, JpegImage, PngImage, ScannedImage
+from .images import ScannedImageMetadata, ScannedImage
 from .scanner import Scanner, list_devices
 from .types import (
     CustomPageSize,
+    ScanAreaSize,
     PageSize,
-    PerSourceCapabilities,
-    ScanCapabilities,
+    ScannerCapabilities,
+    SourceCapabilities,
     ScanDevice,
     ScanOptions,
 )
@@ -33,8 +35,9 @@ __all__ = [
     "Scanner",
     "ScanDevice",
     "ScanOptions",
-    "ScanCapabilities",
-    "PerSourceCapabilities",
+    "ScannerCapabilities",
+    "SourceCapabilities",
+    "ScanAreaSize",
     "CustomPageSize",
     "PageSize",
     "PageSizeName",
@@ -44,16 +47,15 @@ __all__ = [
     "PaperSource",
     "PixelFormat",
     "ImageFormat",
-    "Image",
+    "ScannedImageMetadata",
     "ScannedImage",
-    "PngImage",
-    "JpegImage",
     "ScannerError",
     "DeviceOfflineError",
     "DeviceNotFoundError",
     "ScanCancelledError",
     "ScanDriverError",
     "ValidationError",
+    "UnsupportedPixelFormatError",
 ]
 
 __version__ = "0.1.0"

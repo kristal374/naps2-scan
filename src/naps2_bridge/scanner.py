@@ -5,24 +5,23 @@ from __future__ import annotations
 from typing import Callable, Iterator, List, Optional, Protocol
 
 from .enums import ColorMode, Driver, PaperSource
-from .images import Image
-from .types import PageSize, ScannerCapabilities, ScanDevice, ScanOptions
-
+from .images import ScannedImage
+from .types import PageSize, ScannerCapabilities, ScanDevice, ScanOptions, DPI, UNSET_VALUE, OptionalArg
 
 StartCallback = Callable[[], None]
 
+
 class ProgressCallback(Protocol):
     def __call__(self, page_number: int, progress: float) -> None: ...
-    
+
+
 class PageCallback(Protocol):
-    def __call__(self, page_number: int, image: Optional[Image] = None) -> None: ...
-
-
+    def __call__(self, page_number: int, image: ScannedImage) -> None: ...
 
 
 def list_devices(
-    driver: Optional[Driver] = None, *, timeout: Optional[float] = None
-    ) -> List[ScanDevice]:
+        driver: Optional[Driver] = None, *, timeout: Optional[float] = None
+) -> List[ScanDevice]:
     """Discover available scanner devices.
 
     Args:
@@ -44,7 +43,7 @@ class Scanner:
 
     def __init__(self, device: ScanDevice) -> None:
         self._device = device
-        self._is_opened = False
+        self._is_opened_connection = False
 
     @property
     def device(self) -> ScanDevice:
@@ -71,37 +70,35 @@ class Scanner:
         raise NotImplementedError
 
     def scan(
-        self,
-        *,
-        dpi: Optional[int] = None,
-        color_mode: Optional[ColorMode] = None,
-        paper_source: Optional[PaperSource]=None,
-        page_size: Optional[PageSize]=None,
-        brightness: Optional[int]=None,
-        contrast: Optional[int]=None,
-        brightness_contrast_after_scan: Optional[bool]=None,
-        use_native_ui: Optional[bool]=None,
-        
-        on_scan_start: Optional[StartCallback] = None,
-        on_scan_end: Optional[StartCallback] = None,
-        on_page_start: Optional[PageCallback] = None,
-        on_page_progress: Optional[ProgressCallback] = None,
-        on_page_end: Optional[PageCallback] = None,
-        
-        options: Optional[ScanOptions] = None,
-    ) -> Iterator[Image]:
+            self,
+            *,
+            dpi: OptionalArg[DPI] = UNSET_VALUE,
+            color_mode: OptionalArg[ColorMode] = UNSET_VALUE,
+            paper_source: OptionalArg[PaperSource] = UNSET_VALUE,
+            page_size: OptionalArg[PageSize] = UNSET_VALUE,
+            brightness: OptionalArg[int] = UNSET_VALUE,
+            contrast: OptionalArg[int] = UNSET_VALUE,
+            brightness_contrast_after_scan: OptionalArg[bool] = UNSET_VALUE,
+            use_native_ui: OptionalArg[bool] = UNSET_VALUE,
+
+            on_scan_start: Optional[StartCallback] = None,
+            on_scan_end: Optional[StartCallback] = None,
+            on_page_start: Optional[PageCallback] = None,
+            on_page_progress: Optional[ProgressCallback] = None,
+            on_page_end: Optional[PageCallback] = None,
+
+            options: Optional[ScanOptions] = None,
+    ) -> Iterator[ScannedImage]:
         """Start scanning and yield scanned images.
 
         Args:
-            options: Base scan options. If omitted, default options are used.
             on_scan_start: Called when scanning starts.
             on_scan_end: Called when scanning ends.
             on_page_start: Called when page scanning starts.
             on_page_progress: Called with progress updates for the current page.
             on_page_end: Called when page scanning ends, with the resulting image.
-            **kwargs: Override any field of ``options``. Takes priority over the
-                values in the ``options`` object.
 
+            options: Base scan options. If omitted, default options are used.
         Yields:
             Scanned images.
 

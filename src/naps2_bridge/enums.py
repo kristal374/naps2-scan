@@ -63,8 +63,8 @@ class PageSizeName(Enum):
     A3 = "A3"
     A4 = "A4"
     A5 = "A5"
-    A5 = "A6"
-    A5 = "A7"
+    A6 = "A6"
+    A7 = "A7"
 
     B0 = "B0"
     B1 = "B1"
