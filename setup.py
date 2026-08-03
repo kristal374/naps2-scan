@@ -16,20 +16,21 @@ from setuptools.logging import configure
 logger = logging.getLogger(__name__)
 configure()
 
-ROOT = Path(__file__).parent.resolve()
+ROOT = Path(__file__).resolve().parent
 NATIVE_DIR = ROOT / "src" / "naps2_bridge" / "native"
 NATIVE_PROJECT = NATIVE_DIR / "NAPS2Bridge.csproj"
 NATIVE_BIN_DIRNAME = "native_bin"
 
 CONFIGURATION = "Release"
-TARGET_FRAMEWORK = "net8.0"
+TARGET_FRAMEWORK_DEFAULT = "net8.0"
+TARGET_FRAMEWORK_MACOS = os.environ.get("NAPS2_BRIDGE_MACOS_TFM", "net8.0-macos13.0")
 
-_RID_TABLE = {
+RID_TABLE = {
     "win32": {"default": "win-x64", "arm": "win-arm64"},
     "linux": {"default": "linux-x64", "arm": "linux-arm64"},
     "darwin": {"default": "osx-x64", "arm": "osx-arm64"},
 }
-_ARM_MACHINES = {"arm64", "aarch64"}
+ARM_MACHINES = {"arm64", "aarch64"}
 
 
 class NativeBuildError(RuntimeError):
@@ -42,14 +43,14 @@ def resolve_rid() -> str:
         logger.info("Using RID from NAPS2_BRIDGE_RID: %s", override)
         return override
 
-    platform_rids = _RID_TABLE.get(sys.platform)
+    platform_rids = RID_TABLE.get(sys.platform)
     if platform_rids is None:
         raise NativeBuildError(
             f"Unsupported platform for native build: {sys.platform!r}. "
-            f"Set NAPS2_BRIDGE_RID to override auto-detection."
+            "Set NAPS2_BRIDGE_RID to override auto-detection."
         )
 
-    is_arm = platform.machine().lower() in _ARM_MACHINES
+    is_arm = platform.machine().lower() in ARM_MACHINES
     return platform_rids["arm" if is_arm else "default"]
 
 
@@ -57,7 +58,9 @@ def find_dotnet() -> str:
     override = os.environ.get("NAPS2_BRIDGE_DOTNET")
     if override:
         if not Path(override).exists():
-            raise NativeBuildError(f"NAPS2_BRIDGE_DOTNET points to a missing file: {override}")
+            raise NativeBuildError(
+                f"NAPS2_BRIDGE_DOTNET points to a missing file: {override}"
+            )
         return override
 
     dotnet = shutil.which("dotnet")
@@ -72,49 +75,69 @@ def find_dotnet() -> str:
     return dotnet
 
 
+def target_framework_for(rid: str) -> str:
+    if rid.startswith("osx"):
+        return TARGET_FRAMEWORK_MACOS
+    return TARGET_FRAMEWORK_DEFAULT
+
+
+def ensure_macos_build_host(rid: str) -> None:
+    if rid.startswith("osx") and sys.platform != "darwin":
+        raise NativeBuildError(
+            f"Cannot build native binaries for {rid} on {sys.platform!r}. "
+            f"macOS builds require TFM {TARGET_FRAMEWORK_MACOS} (Driver.Apple) "
+            "and must be run on a macOS host with the .NET 8 SDK and macOS "
+            "workload installed (dotnet workload install macOS)."
+        )
+
+
 def publish_dir_for(rid: str) -> Path:
-    return NATIVE_DIR / "bin" / CONFIGURATION / TARGET_FRAMEWORK / rid / "publish"
+    tfm = target_framework_for(rid)
+    return NATIVE_DIR / "bin" / CONFIGURATION / tfm / rid / "publish"
 
 
 def publish_native(rid: str, dotnet_exe: str) -> Path:
     if not NATIVE_PROJECT.exists():
         raise NativeBuildError(f"Native project not found: {NATIVE_PROJECT}")
 
+    ensure_macos_build_host(rid)
+
     out_dir = publish_dir_for(rid)
-    force = os.environ.get("NAPS2_BRIDGE_FORCE_REBUILD") == "1"
-    if out_dir.exists() and not force:
-        logger.info("Reusing existing native build for %s at %s (set "
-                    "NAPS2_BRIDGE_FORCE_REBUILD=1 to force a rebuild)", rid, out_dir)
+    if out_dir.exists() and os.environ.get("NAPS2_BRIDGE_FORCE_REBUILD") != "1":
+        logger.info(
+            "Reusing existing native build for %s at %s "
+            "(set NAPS2_BRIDGE_FORCE_REBUILD=1 to force a rebuild)",
+            rid,
+            out_dir,
+        )
         return out_dir
 
+    tfm = target_framework_for(rid)
     args = [
-        dotnet_exe, "publish", str(NATIVE_PROJECT),
+        dotnet_exe,
+        "publish",
+        str(NATIVE_PROJECT),
         "-c", CONFIGURATION,
         "-r", rid,
-        "-f", TARGET_FRAMEWORK,
+        "-f", tfm,
         "--self-contained", "false",
         "/p:PublishSingleFile=false",
         "/p:PublishReadyToRun=false",
         "/nologo",
     ]
-    logger.info("Building native bridge for %s: %s", rid, " ".join(args))
+    logger.info("Building native bridge for %s (TFM %s): %s", rid, tfm, " ".join(args))
 
     result = subprocess.run(args, cwd=ROOT)
     if result.returncode != 0:
-        raise NativeBuildError(
-            f"`dotnet publish` failed with exit code {result.returncode}. "
-            "See the dotnet/NuGet/MSBuild output above for the actual cause "
-            "(common culprits: missing .NET 8 SDK, no network access to "
-            "NuGet, or a PackageReference that isn't compatible with this "
-            f"RID: {rid})."
-        )
-    logger.info("Native build finished: %s", out_dir)
+        raise NativeBuildError(_publish_failure_message(rid, tfm, result.returncode))
 
     if not out_dir.exists():
         raise NativeBuildError(
-            f"dotnet publish reported success but the expected output "
+            "dotnet publish reported success but the expected output "
             f"directory is missing: {out_dir}"
         )
+
+    logger.info("Native build finished: %s", out_dir)
     return out_dir
 
 
@@ -122,14 +145,31 @@ def sync_native_binaries(publish_dir: Path, build_lib: Path) -> None:
     dest_dir = build_lib / "naps2_bridge" / "bridge" / NATIVE_BIN_DIRNAME
 
     if dest_dir.exists():
-        shutil.rmtree(dest_dir)  # avoid stale files from a previous RID
+        shutil.rmtree(dest_dir)
     shutil.copytree(publish_dir, dest_dir)
 
-    logger.info("Copied %d entries into %s",
-                sum(1 for _ in dest_dir.rglob("*") if _.is_file()), dest_dir)
+    file_count = sum(1 for path in dest_dir.rglob("*") if path.is_file())
+    logger.info("Copied %d files into %s", file_count, dest_dir)
 
 
-class MyBuild(build_py):
+def _publish_failure_message(rid: str, tfm: str, exit_code: int) -> str:
+    macos_hint = ""
+    if rid.startswith("osx"):
+        macos_hint = (
+            f"\nmacOS builds require TFM {TARGET_FRAMEWORK_MACOS} (Driver.Apple) and "
+            "must be run on macOS with the macOS .NET workload installed "
+            "(dotnet workload install macOS)."
+        )
+    return (
+        f"`dotnet publish` failed with exit code {exit_code}. "
+        "See the dotnet/NuGet/MSBuild output above for the actual cause "
+        "(common culprits: missing .NET 8 SDK, no network access to "
+        "NuGet, or a PackageReference that isn't compatible with this "
+        f"RID: {rid}, TFM: {tfm}).{macos_hint}"
+    )
+
+
+class BuildPyWithNative(build_py):
     def run(self) -> None:
         if os.environ.get("NAPS2_BRIDGE_SKIP_NATIVE_BUILD") == "1":
             logger.warning(
@@ -140,17 +180,12 @@ class MyBuild(build_py):
             super().run()
             return
 
-        rid = resolve_rid()
-        dotnet_exe = find_dotnet()
-        publish_dir = publish_native(rid, dotnet_exe)
-
+        publish_dir = publish_native(resolve_rid(), find_dotnet())
         super().run()
-
-        build_lib = Path(self.build_lib).resolve()
-        sync_native_binaries(publish_dir, build_lib)
+        sync_native_binaries(publish_dir, Path(self.build_lib).resolve())
 
 
-class MyBdistWheel(bdist_wheel):
+class BdistWheelWithNative(bdist_wheel):
     def finalize_options(self) -> None:
         super().finalize_options()
         self.root_is_pure = False
@@ -162,7 +197,7 @@ class MyBdistWheel(bdist_wheel):
 
 setup(
     cmdclass={
-        "build_py": MyBuild,
-        "bdist_wheel": MyBdistWheel
-    },
+        "build_py": BuildPyWithNative,
+        "bdist_wheel": BdistWheelWithNative,
+    }
 )
