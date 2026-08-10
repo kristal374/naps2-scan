@@ -42,8 +42,14 @@ class APIWorker:
         return self._connection
 
     @dotnet_async
-    def list_devices(self, driver: Driver = Driver.DEFAULT, *, timeout: Optional[float] = None):
-        task = self.connection.GetDevicesAsync(driver.value)
+    def list_devices(
+        self,
+        driver: Driver = Driver.DEFAULT,
+        *,
+        timeout: Optional[float] = None,
+    ):
+        timeout_ms = int(timeout * 1000) if timeout is not None else 0
+        task = self.connection.GetDevicesAsync(driver.value, timeout_ms)
         device_list = json.loads(task.GetAwaiter().GetResult())
         return [ScanDevice(**device) for device in device_list]
 

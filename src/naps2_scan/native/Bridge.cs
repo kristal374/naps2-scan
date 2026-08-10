@@ -48,17 +48,21 @@ public static class Bridge
     }
 
     public static Task<string> GetDevicesAsync(string driverName) =>
-        GetDevicesAsync(driverName, CancellationToken.None);
+        GetDevicesAsync(driverName, 0);
 
     public static async Task<string> GetDevicesAsync(
         string driverName,
-        CancellationToken cancellationToken)
+        int timeoutMilliseconds = 0)
     {
         EnsureInitialized();
+        using var cts = timeoutMilliseconds > 0
+            ? new CancellationTokenSource(timeoutMilliseconds)
+            : new CancellationTokenSource();
+        var cancellationToken = cts.Token;
+
         var driver = ParseDriver(driverName);
         var devices = new List<ScanDevice>();
-        await foreach (var device in _controller!.GetDevices(driver, cancellationToken)
-                           .WithCancellation(cancellationToken))
+        await foreach (var device in _controller!.GetDevices(driver, cancellationToken))
         {
             devices.Add(device);
         }

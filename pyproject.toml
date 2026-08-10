@@ -16,7 +16,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["naps2_scan", "naps2_scan.core"]
+packages = ["naps2_scan", "naps2_scan.core", "naps2_scan.asyncio", "naps2_scan.sync"]
 
 [tool.setuptools.package-data]
 "naps2_scan.core" = ["native_bin/*"]
