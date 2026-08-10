@@ -127,7 +127,7 @@ wheels = [
 ]
 
 [[package]]
-name = "naps2-bridge"
+name = "naps2-scan"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

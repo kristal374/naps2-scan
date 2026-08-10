@@ -1,5 +1,5 @@
 [project]
-name = "naps2-bridge"
+name = "naps2-scan"
 version = "0.1.0"
 description = "Python wrapper over NAPS2.Sdk via pythonnet"
 readme = "README.md"
