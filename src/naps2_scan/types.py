@@ -117,7 +117,7 @@ class CapsMetadata(NAPS2BaseModel):
 
 
 class ScannerCapabilities(NAPS2BaseModel):
-    metadata: CapsMetadata | None = None
+    metadata: CapsMetadata
 
     flatbed: SourceCapabilities | None = None
     feeder: SourceCapabilities | None = None
