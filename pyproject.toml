@@ -5,6 +5,8 @@ description = "Python wrapper over NAPS2.Sdk via pythonnet"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "pillow>=12.3.0",
+    "pydantic>=2.13.4",
     "pythonnet>=3.0.4",
 ]
 
@@ -14,17 +16,21 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-include-package-data = true
+packages = ["naps2_scan", "naps2_scan.core"]
 
 [tool.setuptools.package-data]
-"naps2_bridge.bridge" = ["native_bin/*"]
+"naps2_scan.core" = ["native_bin/*"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
-exclude = ["naps2_bridge.native/*"]
+[tool.setuptools.exclude-package-data]
+"naps2_scan" = ["native/*"]
 
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
     "setuptools>=61.0",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "real_scanner: test that requires a connected physical scanner",
 ]

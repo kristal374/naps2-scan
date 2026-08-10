@@ -1,5 +1,6 @@
-include src/naps2_bridge/native/*.csproj
-include src/naps2_bridge/native/*.cs
+include src/naps2_scan/native/*.csproj
+include src/naps2_scan/native/*.cs
 
-prune src/naps2_bridge/native/bin
-prune src/naps2_bridge/native/obj
+prune src/naps2_scan/native/bin
+prune src/naps2_scan/native/obj
+prune src/naps2_scan/core/native_bin

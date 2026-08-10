@@ -10,7 +10,7 @@ class Driver(Enum):
     ESCL = "escl"
 
     def __repr__(self):
-        return self.value.upper()
+        return self.name
 
 
 class ColorMode(Enum):
@@ -18,29 +18,34 @@ class ColorMode(Enum):
     GRAY = "gray"
     BW = "bw"
 
+    def __repr__(self):
+        return self.name
+
 
 class PaperSource(Enum):
     DUPLEX = "duplex"
     FEEDER = "feeder"
     FLATBED = "flatbed"
 
-
-class PixelFormat(Enum):
-    BW1 = "bw1"
-    GRAY8 = "gray8"
-    RGB24 = "rgb24"
-    RGBA32 = "rgba32"
+    def __repr__(self):
+        return self.name
 
 
 class ImageFormat(Enum):
     PNG = "png"
     JPEG = "jpeg"
 
+    def __repr__(self):
+        return self.name
+
 
 class PageSizeUnit(Enum):
     MM = "mm"
     CM = "cm"
     INCH = "in"
+
+    def __repr__(self):
+        return self.name
 
 
 class PageSizeName(Enum):
@@ -53,3 +58,9 @@ class PageSizeName(Enum):
 
     LEGAL = "Legal"
     LETTER = "Letter"
+
+    def __repr__(self):
+        return self.value
+
+    def __str__(self) -> str:
+        return repr(self)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
 import platform
@@ -17,13 +18,13 @@ logger = logging.getLogger(__name__)
 configure()
 
 ROOT = Path(__file__).resolve().parent
-NATIVE_DIR = ROOT / "src" / "naps2_bridge" / "native"
+NATIVE_DIR = ROOT / "src" / "naps2_scan" / "native"
 NATIVE_PROJECT = NATIVE_DIR / "NAPS2Bridge.csproj"
 NATIVE_BIN_DIRNAME = "native_bin"
 
 CONFIGURATION = "Release"
 TARGET_FRAMEWORK_DEFAULT = "net8.0"
-TARGET_FRAMEWORK_MACOS = os.environ.get("NAPS2_BRIDGE_MACOS_TFM", "net8.0-macos13.0")
+TARGET_FRAMEWORK_MACOS = os.environ.get("NAPS2_SCAN_MACOS_TFM", "net8.0-macos13.0")
 
 RID_TABLE = {
     "win32": {"default": "win-x64", "arm": "win-arm64"},
@@ -38,16 +39,16 @@ class NativeBuildError(RuntimeError):
 
 
 def resolve_rid() -> str:
-    override = os.environ.get("NAPS2_BRIDGE_RID")
+    override = os.environ.get("NAPS2_SCAN_RID")
     if override:
-        logger.info("Using RID from NAPS2_BRIDGE_RID: %s", override)
+        logger.info("Using RID from NAPS2_SCAN_RID: %s", override)
         return override
 
     platform_rids = RID_TABLE.get(sys.platform)
     if platform_rids is None:
         raise NativeBuildError(
             f"Unsupported platform for native build: {sys.platform!r}. "
-            "Set NAPS2_BRIDGE_RID to override auto-detection."
+            "Set NAPS2_SCAN_RID to override auto-detection."
         )
 
     is_arm = platform.machine().lower() in ARM_MACHINES
@@ -55,11 +56,11 @@ def resolve_rid() -> str:
 
 
 def find_dotnet() -> str:
-    override = os.environ.get("NAPS2_BRIDGE_DOTNET")
+    override = os.environ.get("NAPS2_SCAN_DOTNET")
     if override:
         if not Path(override).exists():
             raise NativeBuildError(
-                f"NAPS2_BRIDGE_DOTNET points to a missing file: {override}"
+                f"NAPS2_SCAN_DOTNET points to a missing file: {override}"
             )
         return override
 
@@ -69,8 +70,8 @@ def find_dotnet() -> str:
             "The 'dotnet' executable was not found on PATH.\n"
             "Install the .NET 8 SDK from https://dotnet.microsoft.com/download "
             "(the SDK is required to build, not just the runtime), or set "
-            "NAPS2_BRIDGE_DOTNET to its full path.\n"
-            "To skip the native build entirely, set NAPS2_BRIDGE_SKIP_NATIVE_BUILD=1."
+            "NAPS2_SCAN_DOTNET to its full path.\n"
+            "To skip the native build entirely, set NAPS2_SCAN_SKIP_NATIVE_BUILD=1."
         )
     return dotnet
 
@@ -103,10 +104,10 @@ def publish_native(rid: str, dotnet_exe: str) -> Path:
     ensure_macos_build_host(rid)
 
     out_dir = publish_dir_for(rid)
-    if out_dir.exists() and os.environ.get("NAPS2_BRIDGE_FORCE_REBUILD") != "1":
+    if out_dir.exists() and os.environ.get("NAPS2_SCAN_FORCE_REBUILD") != "1":
         logger.info(
             "Reusing existing native build for %s at %s "
-            "(set NAPS2_BRIDGE_FORCE_REBUILD=1 to force a rebuild)",
+            "(set NAPS2_SCAN_FORCE_REBUILD=1 to force a rebuild)",
             rid,
             out_dir,
         )
@@ -125,7 +126,7 @@ def publish_native(rid: str, dotnet_exe: str) -> Path:
         "/p:PublishReadyToRun=false",
         "/nologo",
     ]
-    logger.info("Building native bridge for %s (TFM %s): %s", rid, tfm, " ".join(args))
+    logger.info("Building native core for %s (TFM %s): %s", rid, tfm, " ".join(args))
 
     result = subprocess.run(args, cwd=ROOT)
     if result.returncode != 0:
@@ -142,7 +143,7 @@ def publish_native(rid: str, dotnet_exe: str) -> Path:
 
 
 def sync_native_binaries(publish_dir: Path, build_lib: Path) -> None:
-    dest_dir = build_lib / "naps2_bridge" / "bridge" / NATIVE_BIN_DIRNAME
+    dest_dir = build_lib / "naps2_scan" / "core" / NATIVE_BIN_DIRNAME
 
     if dest_dir.exists():
         shutil.rmtree(dest_dir)
@@ -150,6 +151,28 @@ def sync_native_binaries(publish_dir: Path, build_lib: Path) -> None:
 
     file_count = sum(1 for path in dest_dir.rglob("*") if path.is_file())
     logger.info("Copied %d files into %s", file_count, dest_dir)
+
+
+def create_config(build_lib: Path) -> None:
+    dest_dir = build_lib / "naps2_scan" / "core" / NATIVE_BIN_DIRNAME
+
+    if not dest_dir.exists():
+        raise RuntimeError("Destination directory is missing.")
+
+    # NAPS2Bridge is built for .NET 8.0. Generate a minimal
+    # runtime config so pythonnet can locate the shared runtime.
+    config = {
+        "runtimeOptions": {
+            "tfm": "net8.0",
+            "framework": {
+                "name": "Microsoft.NETCore.App",
+                "version": "8.0.0"
+            },
+            "rollForward": "LatestMajor"
+        }
+    }
+    config_path = dest_dir / "NAPS2Bridge.runtimeconfig.json"
+    config_path.write_text(json.dumps(config, indent=2), encoding="utf-8")
 
 
 def _publish_failure_message(rid: str, tfm: str, exit_code: int) -> str:
@@ -171,9 +194,9 @@ def _publish_failure_message(rid: str, tfm: str, exit_code: int) -> str:
 
 class BuildPyWithNative(build_py):
     def run(self) -> None:
-        if os.environ.get("NAPS2_BRIDGE_SKIP_NATIVE_BUILD") == "1":
+        if os.environ.get("NAPS2_SCAN_SKIP_NATIVE_BUILD") == "1":
             logger.warning(
-                "NAPS2_BRIDGE_SKIP_NATIVE_BUILD=1 set — skipping native build. "
+                "NAPS2_SCAN_SKIP_NATIVE_BUILD=1 set — skipping native build. "
                 "The resulting package will NOT include native_bin and will "
                 "fail at import time."
             )
@@ -182,7 +205,9 @@ class BuildPyWithNative(build_py):
 
         publish_dir = publish_native(resolve_rid(), find_dotnet())
         super().run()
-        sync_native_binaries(publish_dir, Path(self.build_lib).resolve())
+        dest_dir = Path(self.build_lib).resolve()
+        sync_native_binaries(publish_dir, dest_dir)
+        create_config(dest_dir)
 
 
 class BdistWheelWithNative(bdist_wheel):

@@ -1,4 +1,4 @@
-"""Exception types for naps2_bridge."""
+"""Exception types for naps2_scan."""
 
 
 class ScannerError(Exception):
@@ -11,6 +11,10 @@ class DeviceOfflineError(ScannerError):
 
 class DeviceNotFoundError(ScannerError):
     """Raised when the requested device cannot be found."""
+
+
+class ScanFailedError(ScannerError):
+    """Raised when a scan operation fails."""
 
 
 class ScanCancelledError(ScannerError):
