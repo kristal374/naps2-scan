@@ -9,7 +9,7 @@ class Driver(Enum):
     SANE = "sane"
     ESCL = "escl"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
 
@@ -18,7 +18,7 @@ class ColorMode(Enum):
     GRAY = "gray"
     BW = "bw"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
 
@@ -27,7 +27,7 @@ class PaperSource(Enum):
     FEEDER = "feeder"
     FLATBED = "flatbed"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
 
@@ -36,7 +36,7 @@ class PageSizeUnit(Enum):
     CM = "cm"
     INCH = "in"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
 
@@ -51,7 +51,7 @@ class PageSizeName(Enum):
     LEGAL = "Legal"
     LETTER = "Letter"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.value
 
     def __str__(self) -> str:

@@ -1,32 +1,31 @@
 from __future__ import annotations
 
-from typing import Iterator, List, Optional, Self
+from collections.abc import Iterator
+from types import TracebackType
+from typing import Self
 
 from PIL.Image import Image
 
-from ..core.scanner import CoreScanner, list_devices as core_list_devices
+from ..core.scanner import CoreScanner
+from ..core.scanner import list_devices as core_list_devices
+from ..enums import ColorMode, Driver, PaperSource
 from ..types import (
-    PageCallback,
-    ProgressCallback,
-    StartCallback,
-    OptionalArg,
-    UNSET_VALUE,
-    PageSize,
     DPI,
-    Driver,
+    UNSET_VALUE,
+    OptionalArg,
+    PageCallback,
+    PageSize,
+    ProgressCallback,
     ScanDevice,
     ScannerCapabilities,
     ScanOptions,
-    ColorMode,
-    PaperSource
+    StartCallback,
 )
 
 
 def list_devices(
-        driver: Driver = Driver.DEFAULT,
-        *,
-        timeout: Optional[float] = None
-) -> List[ScanDevice]:
+    driver: Driver = Driver.DEFAULT, *, timeout: float | None = None
+) -> list[ScanDevice]:
     return core_list_devices(driver=driver, timeout=timeout)
 
 
@@ -46,24 +45,22 @@ class Scanner:
         return self._core.capabilities()
 
     def scan(
-            self,
-            *,
-            dpi: OptionalArg[DPI] = UNSET_VALUE,
-            color_mode: OptionalArg[ColorMode] = UNSET_VALUE,
-            paper_source: OptionalArg[PaperSource] = UNSET_VALUE,
-            page_size: OptionalArg[PageSize] = UNSET_VALUE,
-            brightness: OptionalArg[int] = UNSET_VALUE,
-            contrast: OptionalArg[int] = UNSET_VALUE,
-            brightness_contrast_after_scan: OptionalArg[bool] = UNSET_VALUE,
-            use_native_ui: OptionalArg[bool] = UNSET_VALUE,
-
-            on_scan_start: Optional[StartCallback] = None,
-            on_scan_end: Optional[StartCallback] = None,
-            on_page_start: Optional[PageCallback] = None,
-            on_page_progress: Optional[ProgressCallback] = None,
-            on_page_end: Optional[PageCallback] = None,
-
-            options: ScanOptions = ScanOptions(),
+        self,
+        *,
+        dpi: OptionalArg[DPI] = UNSET_VALUE,
+        color_mode: OptionalArg[ColorMode] = UNSET_VALUE,
+        paper_source: OptionalArg[PaperSource] = UNSET_VALUE,
+        page_size: OptionalArg[PageSize] = UNSET_VALUE,
+        brightness: OptionalArg[int] = UNSET_VALUE,
+        contrast: OptionalArg[int] = UNSET_VALUE,
+        brightness_contrast_after_scan: OptionalArg[bool] = UNSET_VALUE,
+        use_native_ui: OptionalArg[bool] = UNSET_VALUE,
+        on_scan_start: StartCallback | None = None,
+        on_scan_end: StartCallback | None = None,
+        on_page_start: PageCallback | None = None,
+        on_page_progress: ProgressCallback | None = None,
+        on_page_end: PageCallback | None = None,
+        options: ScanOptions | None = None,
     ) -> Iterator[Image]:
         return self._core.scan(
             dpi=dpi,
@@ -79,7 +76,7 @@ class Scanner:
             on_page_start=on_page_start,
             on_page_progress=on_page_progress,
             on_page_end=on_page_end,
-            options=options,
+            options=options if options is not None else ScanOptions(),
         )
 
     def stop(self) -> None:
@@ -91,5 +88,10 @@ class Scanner:
     def __enter__(self) -> Self:
         return self.open()
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self.close()

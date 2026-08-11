@@ -1,38 +1,33 @@
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncIterator, List, Optional, Self
+from collections.abc import AsyncIterator
+from types import TracebackType
+from typing import Self
 
 from PIL.Image import Image
 
-from ..core.scanner import CoreScanner, list_devices as core_list_devices
+from ..core.scanner import CoreScanner
+from ..core.scanner import list_devices as core_list_devices
+from ..enums import ColorMode, Driver, PaperSource
 from ..types import (
-    PageCallback,
-    ProgressCallback,
-    StartCallback,
-    OptionalArg,
-    UNSET_VALUE,
-    PageSize,
     DPI,
-    Driver,
+    UNSET_VALUE,
+    OptionalArg,
+    PageCallback,
+    PageSize,
+    ProgressCallback,
     ScanDevice,
     ScannerCapabilities,
     ScanOptions,
-    ColorMode,
-    PaperSource
+    StartCallback,
 )
 
 
 async def async_list_devices(
-        driver: Driver = Driver.DEFAULT,
-        *,
-        timeout: Optional[float] = None
-) -> List[ScanDevice]:
-    return await asyncio.to_thread(
-        core_list_devices,
-        driver=driver,
-        timeout=timeout
-    )
+    driver: Driver = Driver.DEFAULT, *, timeout: float | None = None
+) -> list[ScanDevice]:
+    return await asyncio.to_thread(core_list_devices, driver=driver, timeout=timeout)
 
 
 class AsyncScanner:
@@ -51,24 +46,22 @@ class AsyncScanner:
         return await asyncio.to_thread(self._core.capabilities)
 
     async def scan(
-            self,
-            *,
-            dpi: OptionalArg[DPI] = UNSET_VALUE,
-            color_mode: OptionalArg[ColorMode] = UNSET_VALUE,
-            paper_source: OptionalArg[PaperSource] = UNSET_VALUE,
-            page_size: OptionalArg[PageSize] = UNSET_VALUE,
-            brightness: OptionalArg[int] = UNSET_VALUE,
-            contrast: OptionalArg[int] = UNSET_VALUE,
-            brightness_contrast_after_scan: OptionalArg[bool] = UNSET_VALUE,
-            use_native_ui: OptionalArg[bool] = UNSET_VALUE,
-
-            on_scan_start: Optional[StartCallback] = None,
-            on_scan_end: Optional[StartCallback] = None,
-            on_page_start: Optional[PageCallback] = None,
-            on_page_progress: Optional[ProgressCallback] = None,
-            on_page_end: Optional[PageCallback] = None,
-
-            options: ScanOptions = ScanOptions(),
+        self,
+        *,
+        dpi: OptionalArg[DPI] = UNSET_VALUE,
+        color_mode: OptionalArg[ColorMode] = UNSET_VALUE,
+        paper_source: OptionalArg[PaperSource] = UNSET_VALUE,
+        page_size: OptionalArg[PageSize] = UNSET_VALUE,
+        brightness: OptionalArg[int] = UNSET_VALUE,
+        contrast: OptionalArg[int] = UNSET_VALUE,
+        brightness_contrast_after_scan: OptionalArg[bool] = UNSET_VALUE,
+        use_native_ui: OptionalArg[bool] = UNSET_VALUE,
+        on_scan_start: StartCallback | None = None,
+        on_scan_end: StartCallback | None = None,
+        on_page_start: PageCallback | None = None,
+        on_page_progress: ProgressCallback | None = None,
+        on_page_end: PageCallback | None = None,
+        options: ScanOptions | None = None,
     ) -> AsyncIterator[Image]:
         it = self._core.scan(
             dpi=dpi,
@@ -84,7 +77,7 @@ class AsyncScanner:
             on_page_start=on_page_start,
             on_page_progress=on_page_progress,
             on_page_end=on_page_end,
-            options=options,
+            options=options if options is not None else ScanOptions(),
         )
 
         def _next_item() -> Image | None:
@@ -109,5 +102,10 @@ class AsyncScanner:
     async def __aenter__(self) -> Self:
         return await self.open()
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         await self.close()

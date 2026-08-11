@@ -1,12 +1,10 @@
 from typing import Any
 
-
 class AppDomain:
-    CurrentDomain: "AppDomain"
+    CurrentDomain: AppDomain
 
     @staticmethod
     def SetData(name: str, value: Any) -> None: ...
-
 
 class AppContext:
     @staticmethod

@@ -1,16 +1,22 @@
 from __future__ import annotations
 
-from typing import Union, TypeVar, TypeAlias, TypedDict, Unpack, Protocol, Callable
+from collections.abc import Callable
+from typing import Protocol, TypedDict, Unpack
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
-from .enums import ColorMode, Driver, PageSizeUnit, PaperSource, PageSizeName
+from .enums import ColorMode, Driver, PageSizeName, PageSizeUnit, PaperSource
 
+
+class _Unset:
+    def __repr__(self) -> str:
+        return "UNSET_VALUE"
+
+
+UNSET_VALUE = _Unset()
+
+type OptionalArg[ARGUMENTS] = ARGUMENTS | _Unset
 DPI = int
-UNSET_VALUE = object()
-
-ARGUMENTS = TypeVar("ARGUMENTS")
-OptionalArg: TypeAlias = ARGUMENTS | object
 
 StartCallback = Callable[[], None]
 PageCallback = Callable[[int], None]
@@ -46,7 +52,7 @@ class ScanDevice(NAPS2BaseModel):
 
     @field_validator("driver", mode="before")
     @classmethod
-    def parse_driver(cls, value):
+    def parse_driver(cls, value: Driver | str) -> Driver:
         if isinstance(value, Driver):
             return value
         return Driver(value.lower())
@@ -68,7 +74,7 @@ class ScanAreaSize(CustomPageSize):
     pass
 
 
-PageSize = Union[PageSizeName, CustomPageSize]
+PageSize = PageSizeName | CustomPageSize
 
 
 class SourceCapabilities(NAPS2BaseModel):
@@ -123,18 +129,26 @@ class ScannerCapabilities(NAPS2BaseModel):
 
     @property
     def paper_sources(self) -> list[SourceCapabilities]:
-        return [source for source in (self.flatbed, self.feeder, self.duplex,) if source is not None]
+        return [
+            source
+            for source in (
+                self.flatbed,
+                self.feeder,
+                self.duplex,
+            )
+            if source is not None
+        ]
 
 
 class ScanOptionsDict(TypedDict, total=False):
-    dpi: DPI | None | UNSET_VALUE
-    color_mode: ColorMode | None | UNSET_VALUE
-    paper_source: PaperSource | None | UNSET_VALUE
-    page_size: PageSize | None | UNSET_VALUE
-    brightness: int | UNSET_VALUE
-    contrast: int | UNSET_VALUE
-    brightness_contrast_after_scan: bool | UNSET_VALUE
-    use_native_ui: bool | UNSET_VALUE
+    dpi: OptionalArg[DPI | None]
+    color_mode: OptionalArg[ColorMode | None]
+    paper_source: OptionalArg[PaperSource | None]
+    page_size: OptionalArg[PageSize | None]
+    brightness: OptionalArg[int]
+    contrast: OptionalArg[int]
+    brightness_contrast_after_scan: OptionalArg[bool]
+    use_native_ui: OptionalArg[bool]
 
 
 class ScanOptions(NAPS2BaseModel):
@@ -179,10 +193,8 @@ class ScanOptions(NAPS2BaseModel):
 
     def merge(self, **kwargs: Unpack[ScanOptionsDict]) -> ScanOptions:
         data = self.model_dump()
-        data.update({
-            key: value
-            for key, value in kwargs.items()
-            if value is not UNSET_VALUE
-        })
+        data.update(
+            {key: value for key, value in kwargs.items() if value is not UNSET_VALUE}
+        )
 
         return type(self).model_validate(data)

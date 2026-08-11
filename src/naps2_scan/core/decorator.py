@@ -2,15 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import functools
-from typing import Callable, Coroutine, Any, ParamSpec, TypeVar
+from collections.abc import Callable, Coroutine
 
 from .exception import wrap_scan_exception
 
-P = ParamSpec("P")
-T = TypeVar("T")
 
-
-def dotnet_async(func: Callable[P, T]) -> Callable[P, Coroutine[Any, Any, T]]:
+def dotnet_async[**P, T](
+    func: Callable[P, T],
+) -> Callable[P, Coroutine[None, None, T]]:
     @functools.wraps(func)
     async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         try:

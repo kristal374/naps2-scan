@@ -13,45 +13,53 @@ from ..exceptions import (
     ValidationError,
 )
 
-_CANCELLATION_NAMES = frozenset({
-    "OperationCanceledException",
-    "TaskCanceledException",
-})
+_CANCELLATION_NAMES = frozenset(
+    {
+        "OperationCanceledException",
+        "TaskCanceledException",
+    }
+)
 
-_DEVICE_NOT_FOUND_NAMES = frozenset({
-    "DeviceNotFoundException",
-})
+_DEVICE_NOT_FOUND_NAMES = frozenset(
+    {
+        "DeviceNotFoundException",
+    }
+)
 
-_DEVICE_OFFLINE_NAMES = frozenset({
-    "DeviceOfflineException",
-})
+_DEVICE_OFFLINE_NAMES = frozenset(
+    {
+        "DeviceOfflineException",
+    }
+)
 
-_DRIVER_ERROR_NAMES = frozenset({
-    "AlreadyHandledDriverException",
-    "DeviceBusyException",
-    "DeviceCommunicationException",
-    "DeviceCoverOpenException",
-    "DeviceException",
-    "DeviceFeederEmptyException",
-    "DevicePaperJamException",
-    "DeviceWarmingUpException",
-    "DriverNotSupportedException",
-    "NoDuplexSupportException",
-    "NoFeederSupportException",
-    "ScanDriverException",
-    "ScanDriverUnknownException",
-})
+_DRIVER_ERROR_NAMES = frozenset(
+    {
+        "AlreadyHandledDriverException",
+        "DeviceBusyException",
+        "DeviceCommunicationException",
+        "DeviceCoverOpenException",
+        "DeviceException",
+        "DeviceFeederEmptyException",
+        "DevicePaperJamException",
+        "DeviceWarmingUpException",
+        "DriverNotSupportedException",
+        "NoDuplexSupportException",
+        "NoFeederSupportException",
+        "ScanDriverException",
+        "ScanDriverUnknownException",
+    }
+)
 
-_VALIDATION_ERROR_NAMES = frozenset({
-    "ArgumentException",
-    "ArgumentNullException",
-    "ArgumentOutOfRangeException",
-    "InvalidOperationException",
-})
+_VALIDATION_ERROR_NAMES = frozenset(
+    {
+        "ArgumentException",
+        "ArgumentNullException",
+        "ArgumentOutOfRangeException",
+        "InvalidOperationException",
+    }
+)
 
-_UNSUPPORTED_ERROR_NAMES = frozenset({
-    "NotSupportedException"
-})
+_UNSUPPORTED_ERROR_NAMES = frozenset({"NotSupportedException"})
 
 _SCAN_FAILED_NAMES = frozenset({"ScanFailedException", "ScanException"})
 
@@ -65,9 +73,13 @@ def _unwrap_exception(exc: Exception) -> Exception:
     while id(exc) not in seen:
         seen.add(id(exc))
 
-        inner_exceptions: list[Exception] = list(getattr(exc, "InnerExceptions", None) or [])
+        inner_exceptions: list[Exception] = list(
+            getattr(exc, "InnerExceptions", None) or []
+        )
         if inner_exceptions:
-            non_cancelled = [e for e in inner_exceptions if not _is_named(e, _CANCELLATION_NAMES)]
+            non_cancelled = [
+                e for e in inner_exceptions if not _is_named(e, _CANCELLATION_NAMES)
+            ]
             exc = non_cancelled[0] if non_cancelled else inner_exceptions[0]
             continue
 
@@ -88,7 +100,7 @@ def wrap_scan_exception(exc: Exception) -> ScannerError:
     exc = _unwrap_exception(exc)
 
     message = str(exc)
-
+    wrapped: ScannerError
     if _is_named(exc, _CANCELLATION_NAMES):
         wrapped = ScanCancelledError(message)
     elif _is_named(exc, _DEVICE_NOT_FOUND_NAMES):

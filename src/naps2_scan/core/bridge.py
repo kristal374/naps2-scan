@@ -3,7 +3,7 @@ from __future__ import annotations
 import threading
 import uuid
 from pathlib import Path
-from typing import Optional, cast
+from typing import Self, cast
 
 import pythonnet
 
@@ -25,7 +25,9 @@ clr.AddReference(str(NATIVE_BIN_PATH))
 
 import System  # noqa
 
-System.AppDomain.CurrentDomain.SetData("APP_CONTEXT_BASE_DIRECTORY", str(NATIVE_BIN_DIR))
+System.AppDomain.CurrentDomain.SetData(
+    "APP_CONTEXT_BASE_DIRECTORY", str(NATIVE_BIN_DIR)
+)
 System.AppContext.SetData("APP_CONTEXT_BASE_DIRECTORY", str(NATIVE_BIN_DIR))
 
 from NAPS2Bridge import Bridge  # noqa
@@ -38,26 +40,27 @@ class NAPS2Bridge:
     """
     Отвечает за прямую работу с жизненным циклом подключения к NAPS2.
     """
-    _instance: Optional[NAPS2Bridge] = None
+
+    _instance: NAPS2Bridge | None = None
     _instance_initialized: bool = False
     _instance_lock = threading.Lock()
 
-    def __new__(cls) -> NAPS2Bridge:
+    def __new__(cls) -> Self:
         with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = super().__new__(cls)
-        return cast(NAPS2Bridge, cls._instance)
+        return cast(Self, cls._instance)
 
-    def __init__(self):
+    def __init__(self) -> None:
         if self._instance_initialized:
             return
         self._instance_initialized = True
 
         self._lock = threading.RLock()
         self._workers: set[uuid.UUID] = set()
-        self._connection = None
+        self._connection: BridgeType | None = None
 
-    def _open(self):
+    def _open(self) -> BridgeType:
         if self._connection is not None:
             return self._connection
 
@@ -71,7 +74,7 @@ class NAPS2Bridge:
         self._connection.Shutdown()
         self._connection = None
 
-    def register_worker(self, worker_id: uuid.UUID):
+    def register_worker(self, worker_id: uuid.UUID) -> BridgeType:
         with self._lock:
             self._workers.add(worker_id)
             self._connection = self._open()
@@ -83,5 +86,5 @@ class NAPS2Bridge:
             self._close()
 
     @staticmethod
-    def make_cancel_token():
+    def make_cancel_token() -> CancellationTokenSource:
         return CancellationTokenSource()
