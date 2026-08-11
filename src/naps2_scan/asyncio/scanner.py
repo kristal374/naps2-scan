@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Iterator, List, Optional, Self
+from typing import AsyncIterator, List, Optional, Self
 
 from PIL.Image import Image
 
@@ -69,9 +69,8 @@ class AsyncScanner:
             on_page_end: Optional[PageCallback] = None,
 
             options: ScanOptions = ScanOptions(),
-    ) -> Iterator[Image]:
-        return await asyncio.to_thread(
-            self._core.scan,
+    ) -> AsyncIterator[Image]:
+        it = self._core.scan(
             dpi=dpi,
             color_mode=color_mode,
             paper_source=paper_source,
@@ -87,6 +86,19 @@ class AsyncScanner:
             on_page_end=on_page_end,
             options=options,
         )
+
+        def _next_item() -> Image | None:
+            return next(it, None)
+
+        try:
+            while True:
+                img = await asyncio.to_thread(_next_item)
+                if img is None:
+                    return
+                yield img
+        except GeneratorExit:
+            await asyncio.to_thread(self._core.stop)
+            raise
 
     async def stop(self) -> None:
         return await asyncio.to_thread(self._core.stop)
