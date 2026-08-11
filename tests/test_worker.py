@@ -242,3 +242,24 @@ def test_scan_generator_exception_stops_token(worker) -> None:
     gen.close()
 
     assert worker._cancel_scan_token is None
+
+
+def test_scan_corrupt_image_data_does_not_hang(worker) -> None:
+    class CorruptBridge(FakeBridge):
+        def ScanAsync(self, *args, **kwargs):
+            on_page = args[5]
+
+            def background():
+                try:
+                    on_page(b"not enough bytes", 10, 10, "RGB")
+                except ValueError:
+                    pass
+
+            threading.Thread(target=background, daemon=True).start()
+            return FakeTask(wait_side_effect=lambda: None)
+
+    worker._connection = CorruptBridge()
+    device = ScanDevice(driver=Driver.WIA, id="dev-1", name="Scanner")
+
+    images = list(worker.scan(device))
+    assert len(images) == 0

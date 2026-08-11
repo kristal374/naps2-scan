@@ -201,6 +201,24 @@ def test_scan_options_merge_can_override_falsey_values() -> None:
     assert merged.use_native_ui is False
 
 
+def test_scan_options_merge_all_unset_returns_unchanged() -> None:
+    original = ScanOptions(dpi=300, brightness=15)
+    merged = original.merge(
+        dpi=UNSET_VALUE,
+        brightness=UNSET_VALUE,
+        contrast=UNSET_VALUE,
+        color_mode=UNSET_VALUE,
+        paper_source=UNSET_VALUE,
+        page_size=UNSET_VALUE,
+        brightness_contrast_after_scan=UNSET_VALUE,
+        use_native_ui=UNSET_VALUE,
+    )
+
+    assert merged.dpi == 300
+    assert merged.brightness == 15
+    assert merged.contrast == 0
+
+
 def test_scan_options_serialization_includes_all_fields() -> None:
     options = ScanOptions(dpi=300)
     data = options.model_dump(mode="json", by_alias=True)
