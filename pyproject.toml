@@ -27,6 +27,7 @@ packages = ["naps2_scan", "naps2_scan.core", "naps2_scan.asyncio", "naps2_scan.s
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
     "setuptools>=83.0",
 ]
 
@@ -34,3 +35,12 @@ dev = [
 markers = [
     "real_scanner: test that requires a connected physical scanner",
 ]
+addopts = "--cov=src/naps2_scan --cov-report=term-missing --cov-report=html"
+
+[tool.coverage.run]
+source = ["src/naps2_scan"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
