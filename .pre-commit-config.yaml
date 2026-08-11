@@ -10,6 +10,10 @@ repos:
     rev: v1.18.2
     hooks:
       - id: mypy
-        args: [--strict]
-        additional_dependencies: [pydantic>=2, pillow>=12, pythonnet>=3]
+        args: [--strict, src/]
+        pass_filenames: false
+        additional_dependencies:
+          - pydantic>=2
+          - pillow>=12
+          - pythonnet>=3
         exclude: ^(tests/|examples/|setup.py)
