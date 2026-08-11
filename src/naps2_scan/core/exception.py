@@ -1,3 +1,11 @@
+"""Mapping of .NET exception names to Python :class:`~naps2_scan.ScannerError` subclasses.
+
+When a .NET exception crosses the pythonnet boundary, its class name is
+matched against predefined sets to produce the correct Python exception
+type.  ``AggregateException`` and ``TargetInvocationException`` are
+unwrapped so their inner (actual) exception is used for classification.
+"""
+
 from __future__ import annotations
 
 from inspect import getmro
@@ -93,6 +101,21 @@ def _unwrap_exception(exc: Exception) -> Exception:
 
 
 def wrap_scan_exception(exc: Exception) -> ScannerError:
+    """Convert a .NET exception into a Python :class:`ScannerError` subclass.
+
+    If *exc* is already a :class:`ScannerError`, it is returned unchanged.
+    ``AggregateException`` instances are unwrapped — cancellation
+    exceptions are skipped in favour of the first non-cancellation inner
+    exception.  ``TargetInvocationException`` similarly yields its
+    ``InnerException``.
+
+    Args:
+        exc: A raw .NET or Python exception.
+
+    Returns:
+        A :class:`ScannerError` subclass with ``__cause__`` set to the
+        original exception.
+    """
     if isinstance(exc, ScannerError):
         return exc
 

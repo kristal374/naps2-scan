@@ -152,7 +152,7 @@ class APIWorker:
         try:
             while True:
                 item = image_queue.get()
-                if item == QueueSignal.DONE:
+                if isinstance(item, QueueSignal):
                     break
                 if isinstance(item, Exception):
                     raise wrap_scan_exception(item)

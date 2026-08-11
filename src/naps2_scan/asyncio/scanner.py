@@ -1,3 +1,24 @@
+"""Asynchronous scanner API for use with ``asyncio``.
+
+The :class:`AsyncScanner` class supports ``async with`` and ``async for``:
+
+```python
+>>> import asyncio
+>>> from naps2_scan import AsyncScanner, async_list_devices, ScanOptions
+>>>
+>>> async def main():
+...     devices = await async_list_devices()
+...     async with AsyncScanner(devices[0]) as scanner:
+...         async for image in scanner.scan(dpi=300):
+...             image.save("page.png")
+>>>
+>>> asyncio.run(main())
+```
+
+All blocking operations run in a thread pool so the event loop stays
+responsive.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -27,22 +48,54 @@ from ..types import (
 async def async_list_devices(
     driver: Driver = Driver.DEFAULT, *, timeout: float | None = None
 ) -> list[ScanDevice]:
+    """Async wrapper for :func:`~naps2_scan.core.scanner.list_devices`.
+
+    Runs device discovery in a thread pool so the event loop is not
+    blocked.  See :func:`list_devices` for full documentation.
+    """
     return await asyncio.to_thread(core_list_devices, driver=driver, timeout=timeout)
 
 
 class AsyncScanner:
+    """Asynchronous scanner for a single device.
+
+    All methods are coroutines.  The scanner can be used as an async
+    context manager (``async with AsyncScanner(device) as s:``).
+
+    Args:
+        device: The :class:`ScanDevice` to use, obtained from
+            :func:`async_list_devices`.
+
+    Example:
+        >>> from naps2_scan import AsyncScanner, async_list_devices, ScanOptions
+        >>>
+        >>> async def main():
+        ...     devices = await async_list_devices()
+        ...     async with AsyncScanner(devices[0]) as scanner:
+        ...         async for img in scanner.scan(options=ScanOptions(dpi=150)):
+        ...             print(img.width, img.height)
+
+    """
+
     def __init__(self, device: ScanDevice):
         self._core = CoreScanner(device=device)
 
     @property
     def device(self) -> ScanDevice:
+        """The :class:`ScanDevice` this scanner is bound to."""
         return self._core.device
 
     async def open(self) -> Self:
+        """Connect to the scanner. Called automatically by the context manager."""
         await asyncio.to_thread(self._core.open)
         return self
 
     async def capabilities(self) -> ScannerCapabilities:
+        """Query the device's supported options.
+
+        Returns:
+            A :class:`ScannerCapabilities` object.
+        """
         return await asyncio.to_thread(self._core.capabilities)
 
     async def scan(
@@ -63,6 +116,19 @@ class AsyncScanner:
         on_page_end: PageCallback | None = None,
         options: ScanOptions | None = None,
     ) -> AsyncIterator[Image]:
+        """Start scanning. Yields pages asynchronously as they arrive.
+
+        Each page is fetched in a thread pool so the event loop is not
+        blocked.  See :meth:`CoreScanner.scan` for full parameter docs.
+
+        Example:
+            >>> from naps2_scan import AsyncScanner, ColorMode
+            >>>
+            >>> async def main():
+            ...     async with AsyncScanner(...) as scanner:
+            ...         async for image in scanner.scan(dpi=300, color_mode=ColorMode.COLOR):
+            ...             image.save("page.png")
+        """
         it = self._core.scan(
             dpi=dpi,
             color_mode=color_mode,
@@ -94,9 +160,11 @@ class AsyncScanner:
             raise
 
     async def stop(self) -> None:
+        """Cancel an in-progress scan."""
         return await asyncio.to_thread(self._core.stop)
 
     async def close(self) -> None:
+        """Disconnect from the scanner."""
         return await asyncio.to_thread(self._core.close)
 
     async def __aenter__(self) -> Self:
