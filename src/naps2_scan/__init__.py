@@ -14,13 +14,16 @@ from .exceptions import (
     DeviceOfflineError,
     ScanCancelledError,
     ScanDriverError,
+    ScanFailedError,
     ScannerError,
     ValidationError,
     UnsupportedPixelFormatError,
 )
 from .sync.scanner import Scanner, list_devices
 from .types import (
+    CapsMetadata,
     CustomPageSize,
+    DPI,
     ScanAreaSize,
     PageSize,
     ScannerCapabilities,
@@ -38,6 +41,7 @@ __all__ = [
     "ScanOptions",
     "ScannerCapabilities",
     "SourceCapabilities",
+    "CapsMetadata",
     "ScanAreaSize",
     "CustomPageSize",
     "PageSize",
@@ -47,11 +51,13 @@ __all__ = [
     "ColorMode",
     "PaperSource",
     "ImageFormat",
+    "DPI",
     "ScannerError",
     "DeviceOfflineError",
     "DeviceNotFoundError",
     "ScanCancelledError",
     "ScanDriverError",
+    "ScanFailedError",
     "ValidationError",
     "UnsupportedPixelFormatError",
 ]

@@ -10,9 +10,9 @@ from typing import Iterator, Optional, Union, Callable, Self
 from PIL import Image
 
 from .bridge import NAPS2Bridge, BridgeType
-from .utils import dotnet_async
+from .decorator import dotnet_async
+from .exception import wrap_scan_exception
 from ..enums import Driver
-from ..exceptions import ScanFailedError
 from ..types import ScanDevice, ScannerCapabilities, ScanOptions
 
 
@@ -25,7 +25,7 @@ class APIWorker:
     Отвечает за прямую работу с API библиотеки NAPS2,
     разделяет этапы работы с подключением/инициализацией и данными,
     обеспечивая возможность одновременной работы нескольких процессов
-    с библиотекой без опасений что другой процесс прервёт соединение.
+    без опасений что другой процесс прервёт соединение.
     """
 
     def __init__(self) -> None:
@@ -44,10 +44,10 @@ class APIWorker:
 
     @dotnet_async
     def list_devices(
-        self,
-        driver: Driver = Driver.DEFAULT,
-        *,
-        timeout: Optional[float] = None,
+            self,
+            driver: Driver = Driver.DEFAULT,
+            *,
+            timeout: Optional[float] = None,
     ):
         with self._busy:
             timeout_ms = int(timeout * 1000) if timeout is not None else 0
@@ -74,6 +74,9 @@ class APIWorker:
             on_page_progress: Optional[Callable[[int, float], None]] = None,
             on_page_end: Optional[Callable[[int], None]] = None,
     ) -> Iterator[Image.Image]:
+        # Validate that the worker is connected before claiming the busy lock.
+        # This raises RuntimeError immediately if open() was not called.
+        _ = self.connection
         if not self._busy.acquire(blocking=False):
             raise RuntimeError("Worker is already busy with another operation")
         try:
@@ -101,7 +104,7 @@ class APIWorker:
             on_page_end: Optional[Callable[[int], None]] = None,
     ) -> Iterator[Image.Image]:
         self._cancel_scan_token = self._bridge.make_cancel_token()
-        image_queue: queue.Queue[Union[Image.Image, QueueSignal, BaseException]] = queue.Queue(maxsize=1)
+        image_queue: queue.Queue[Union[Image.Image, QueueSignal, Exception]] = queue.Queue(maxsize=1)
 
         def processed_new_image(raw_bytes, width: int, height: int, pixel_format: str):
             image_queue.put(
@@ -132,7 +135,7 @@ class APIWorker:
                     self._cancel_scan_token.Token,
                 )
                 task.Wait()
-            except BaseException as e:
+            except Exception as e:
                 image_queue.put(e)
             else:
                 image_queue.put(QueueSignal.DONE)
@@ -145,9 +148,8 @@ class APIWorker:
                 item = image_queue.get()
                 if item == QueueSignal.DONE:
                     break
-                if isinstance(item, BaseException):
-                    # TODO: maybe need use wrap_scan_exception
-                    raise ScanFailedError(f"Scan failed: {item}", item) from item
+                if isinstance(item, Exception):
+                    raise wrap_scan_exception(item)
                 yield item
         except BaseException as exc:
             self.stop()

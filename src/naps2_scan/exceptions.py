@@ -18,7 +18,7 @@ class ScanFailedError(ScannerError):
 
 
 class ScanCancelledError(ScannerError):
-    """Raised when a scan operation is cancelled by the caller."""
+    """Raised when a scan operation is canceled by the caller."""
 
 
 class ScanDriverError(ScannerError):
