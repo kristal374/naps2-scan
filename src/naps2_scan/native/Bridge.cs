@@ -98,16 +98,31 @@ public static class Bridge
 
         var controller = _controller!;
         var currentPage = 0;
+        var reportedPage = 0;
 
         void OnScanStart(object? sender, EventArgs e) => onScanStart?.Invoke();
         void OnScanEnd(object? sender, ScanEndEventArgs e) => onScanEnd?.Invoke();
         void OnPageStart(object? sender, PageStartEventArgs e)
         {
             currentPage = e.PageNumber;
-            onPageStart?.Invoke(e.PageNumber);
         }
-        void OnPageProgress(object? sender, PageProgressEventArgs e) => onProgress?.Invoke(e.PageNumber, e.Progress);
-        void OnPageEnd(object? sender, PageEndEventArgs e) => onPageEnd?.Invoke(e.PageNumber);
+        void ReportPageStartIfNeeded(int pageNumber)
+        {
+            if (reportedPage == pageNumber)
+                return;
+            reportedPage = pageNumber;
+            onPageStart?.Invoke(pageNumber);
+        }
+        void OnPageProgress(object? sender, PageProgressEventArgs e)
+        {
+            ReportPageStartIfNeeded(e.PageNumber);
+            onProgress?.Invoke(e.PageNumber, e.Progress);
+        }
+        void OnPageEnd(object? sender, PageEndEventArgs e)
+        {
+            ReportPageStartIfNeeded(e.PageNumber);
+            onPageEnd?.Invoke(e.PageNumber);
+        }
 
         controller.ScanStart += OnScanStart;
         controller.ScanEnd += OnScanEnd;
