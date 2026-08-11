@@ -129,6 +129,13 @@ def test_already_wrapped_scanner_error_is_returned_unchanged() -> None:
     assert wrapped is exc
 
 
+def test_aggregate_with_empty_inner_exceptions_falls_through() -> None:
+    exc = type("AggregateException", (Exception,), {"InnerExceptions": []})("empty")
+    wrapped = wrap_scan_exception(exc)
+
+    assert isinstance(wrapped, ScannerError)
+
+
 def test_cyclic_inner_exception_chain_breaks_loop() -> None:
     a = type("OuterException", (Exception,), {})("outer")
     b = type("InnerException", (Exception,), {})("inner")

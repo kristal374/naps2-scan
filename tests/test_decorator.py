@@ -34,3 +34,12 @@ def test_dotnet_async_wraps_cancellation() -> None:
 
     with pytest.raises(ScanCancelledError, match="cancelled"):
         asyncio.run(cancelled())
+
+
+def test_dotnet_async_passes_through_keyboard_interrupt() -> None:
+    @dotnet_async
+    def interrupted():
+        raise KeyboardInterrupt
+
+    with pytest.raises(KeyboardInterrupt):
+        asyncio.run(interrupted())
