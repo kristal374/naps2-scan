@@ -12,7 +12,6 @@ from naps2_scan.core.bridge import NAPS2Bridge
 from naps2_scan.enums import ColorMode
 from naps2_scan.types import ScanOptions
 
-
 pytestmark = pytest.mark.real_scanner
 
 
@@ -27,7 +26,11 @@ def reset_singleton():
 
 
 def _should_run_hardware_tests() -> bool:
-    return os.environ.get("NAPS2_BRIDGE_RUN_HARDWARE_TESTS", "").lower() in ("1", "true", "yes")
+    return os.environ.get("NAPS2_BRIDGE_RUN_HARDWARE_TESTS", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
 
 
 @pytest.fixture(scope="module")
@@ -114,13 +117,15 @@ def test_scan_callbacks(scanner):
     events = []
 
     options = ScanOptions(dpi=75, color_mode=ColorMode.GRAY)
-    list(scanner.scan(
-        options=options,
-        on_scan_start=lambda: events.append("start"),
-        on_scan_end=lambda: events.append("end"),
-        on_page_start=lambda n: events.append(("page_start", n)),
-        on_page_end=lambda n: events.append(("page_end", n)),
-    ))
+    list(
+        scanner.scan(
+            options=options,
+            on_scan_start=lambda: events.append("start"),
+            on_scan_end=lambda: events.append("end"),
+            on_page_start=lambda n: events.append(("page_start", n)),
+            on_page_end=lambda n: events.append(("page_end", n)),
+        )
+    )
 
     assert "start" in events
     assert "end" in events

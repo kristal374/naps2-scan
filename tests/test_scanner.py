@@ -70,10 +70,12 @@ def test_core_scanner_context_manager_exception_propagates(fake_bridge) -> None:
     bridge = NAPS2Bridge()
     device = ScanDevice(driver=Driver.WIA, id="dev-1", name="Scanner")
 
-    with pytest.raises(ValueError, match="test error"):
-        with CoreScanner(device) as scanner:
-            assert scanner.worker.worker_id in bridge._workers
-            raise ValueError("test error")
+    with (
+        pytest.raises(ValueError, match="test error"),
+        CoreScanner(device) as scanner,
+    ):
+        assert scanner.worker.worker_id in bridge._workers
+        raise ValueError("test error")
 
     assert scanner.worker.worker_id not in bridge._workers
 
@@ -115,11 +117,13 @@ def test_core_scanner_scan_with_options(fake_bridge, sample_image) -> None:
     events = []
 
     try:
-        list(scanner.scan(
-            dpi=300,
-            color_mode=ColorMode.COLOR,
-            on_scan_start=lambda: events.append("start"),
-        ))
+        list(
+            scanner.scan(
+                dpi=300,
+                color_mode=ColorMode.COLOR,
+                on_scan_start=lambda: events.append("start"),
+            )
+        )
     finally:
         scanner.close()
 
@@ -186,7 +190,9 @@ def test_core_scanner_break_generator_then_rescan(fake_bridge, sample_image) -> 
         scanner.close()
 
 
-def test_core_scanner_callback_exception_on_scan_start(fake_bridge, sample_image) -> None:
+def test_core_scanner_callback_exception_on_scan_start(
+    fake_bridge, sample_image
+) -> None:
     fake_bridge._scan_result = [sample_image]
     device = ScanDevice(driver=Driver.WIA, id="dev-1", name="Scanner")
     scanner = CoreScanner(device)
@@ -204,7 +210,9 @@ def test_core_scanner_callback_exception_on_scan_start(fake_bridge, sample_image
     assert scanner.worker._cancel_scan_token is None
 
 
-def test_core_scanner_callback_exception_on_page_start(fake_bridge, sample_image) -> None:
+def test_core_scanner_callback_exception_on_page_start(
+    fake_bridge, sample_image
+) -> None:
     fake_bridge._scan_result = [sample_image]
     device = ScanDevice(driver=Driver.WIA, id="dev-1", name="Scanner")
     scanner = CoreScanner(device)

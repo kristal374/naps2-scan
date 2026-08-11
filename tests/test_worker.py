@@ -5,9 +5,9 @@ import threading
 import time
 
 import pytest
+from conftest import FakeBridge, FakeTask
 from PIL import Image
 
-from conftest import FakeBridge, FakeTask
 from naps2_scan.core.bridge import NAPS2Bridge
 from naps2_scan.core.worker import APIWorker
 from naps2_scan.enums import Driver
@@ -25,7 +25,7 @@ class FakeToken:
 
 
 def _make_image(width: int = 10, height: int = 10, mode: str = "RGB") -> Image.Image:
-    return Image.new(mode, (width, height), color=(128, 128, 128)[:len(mode)])
+    return Image.new(mode, (width, height), color=(128, 128, 128)[: len(mode)])
 
 
 @pytest.fixture
@@ -101,14 +101,16 @@ def test_scan_callbacks_fired(fake_bridge, worker) -> None:
 
     events = []
 
-    list(worker.scan(
-        device,
-        on_scan_start=lambda: events.append("start"),
-        on_scan_end=lambda: events.append("end"),
-        on_page_start=lambda n: events.append(("page_start", n)),
-        on_page_end=lambda n: events.append(("page_end", n)),
-        on_page_progress=lambda n, p: events.append(("progress", n, p)),
-    ))
+    list(
+        worker.scan(
+            device,
+            on_scan_start=lambda: events.append("start"),
+            on_scan_end=lambda: events.append("end"),
+            on_page_start=lambda n: events.append(("page_start", n)),
+            on_page_end=lambda n: events.append(("page_end", n)),
+            on_page_progress=lambda n, p: events.append(("progress", n, p)),
+        )
+    )
 
     assert "start" in events
     assert "end" in events
@@ -118,7 +120,9 @@ def test_scan_callbacks_fired(fake_bridge, worker) -> None:
 
 
 def test_scan_wraps_exception(fake_bridge, worker) -> None:
-    fake_bridge._scan_exception = type("DeviceNotFoundException", (Exception,), {})("missing")
+    fake_bridge._scan_exception = type("DeviceNotFoundException", (Exception,), {})(
+        "missing"
+    )
     device = ScanDevice(driver=Driver.WIA, id="dev-1", name="Scanner")
 
     with pytest.raises(DeviceNotFoundError, match="missing"):

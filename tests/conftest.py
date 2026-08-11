@@ -49,8 +49,17 @@ class FakeBridge:
             ).model_dump_json(by_alias=True)
         )
 
-    def ScanAsync(self, options_json, on_start, on_end, on_page_start, on_page_end,
-                  on_page, on_progress, token):
+    def ScanAsync(
+        self,
+        options_json,
+        on_start,
+        on_end,
+        on_page_start,
+        on_page_end,
+        on_page,
+        on_progress,
+        token,
+    ):
         def run():
             if self._scan_exception is not None:
                 raise self._scan_exception

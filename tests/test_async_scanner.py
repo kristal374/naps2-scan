@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-from naps2_scan.core.bridge import NAPS2Bridge
 from naps2_scan.asyncio.scanner import AsyncScanner, async_list_devices
+from naps2_scan.core.bridge import NAPS2Bridge
 from naps2_scan.enums import Driver
 from naps2_scan.types import ScanDevice
 
@@ -82,7 +82,9 @@ def test_async_scanner_scan_multiple_images(fake_bridge, sample_image) -> None:
     asyncio.run(run())
 
 
-def test_async_scanner_scan_does_not_block_event_loop(fake_bridge, sample_image) -> None:
+def test_async_scanner_scan_does_not_block_event_loop(
+    fake_bridge, sample_image
+) -> None:
     fake_bridge._scan_result = [sample_image]
     device = ScanDevice(driver=Driver.WIA, id="dev-1", name="Scanner")
     scanner = AsyncScanner(device)
@@ -115,9 +117,9 @@ def test_async_scanner_scan_does_not_block_event_loop(fake_bridge, sample_image)
 
 
 def test_async_scanner_scan_propagates_error(fake_bridge, sample_image) -> None:
-    fake_bridge._scan_exception = type(
-        "DeviceNotFoundException", (Exception,), {}
-    )("missing")
+    fake_bridge._scan_exception = type("DeviceNotFoundException", (Exception,), {})(
+        "missing"
+    )
     device = ScanDevice(driver=Driver.WIA, id="dev-1", name="Scanner")
     scanner = AsyncScanner(device)
 

@@ -8,15 +8,15 @@ from pydantic import ValidationError
 
 from naps2_scan.enums import ColorMode, Driver, PageSizeName, PageSizeUnit, PaperSource
 from naps2_scan.types import (
+    DPI,
+    UNSET_VALUE,
     CapsMetadata,
     CustomPageSize,
-    DPI,
     ScanAreaSize,
     ScanDevice,
     ScannerCapabilities,
     ScanOptions,
     SourceCapabilities,
-    UNSET_VALUE,
 )
 
 
@@ -80,7 +80,9 @@ def test_custom_page_size_str_and_repr() -> None:
 
 
 def test_custom_page_size_with_decimal_values() -> None:
-    page = CustomPageSize(width=Decimal("8.5"), height=Decimal("11"), unit=PageSizeUnit.INCH)
+    page = CustomPageSize(
+        width=Decimal("8.5"), height=Decimal(11), unit=PageSizeUnit.INCH
+    )
 
     assert str(page) == "8.5x11.0in"
 

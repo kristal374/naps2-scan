@@ -22,15 +22,29 @@ class FakeBridge:
 
     def GetDevicesAsync(self, driver, timeout=0):
         from conftest import FakeTask
-        return FakeTask('[]')
+
+        return FakeTask("[]")
 
     def GetCapabilitiesAsync(self, device_json):
         from conftest import FakeTask
-        return FakeTask('{"metadata": null, "flatbed": null, "feeder": null, "duplex": null}')
 
-    def ScanAsync(self, options_json, on_start, on_end, on_page_start, on_page_end,
-                  on_page, on_progress, token):
+        return FakeTask(
+            '{"metadata": null, "flatbed": null, "feeder": null, "duplex": null}'
+        )
+
+    def ScanAsync(
+        self,
+        options_json,
+        on_start,
+        on_end,
+        on_page_start,
+        on_page_end,
+        on_page,
+        on_progress,
+        token,
+    ):
         from conftest import FakeTask
+
         return FakeTask()
 
 

@@ -63,7 +63,9 @@ def test_cancellation_is_wrapped() -> None:
 
 def test_aggregate_with_cancellation_is_unwrapped_to_cancelled() -> None:
     cancel = _make_exc("TaskCanceledException", "cancelled")
-    exc = type("AggregateException", (Exception,), {"InnerExceptions": [cancel]})("aggregate")
+    exc = type("AggregateException", (Exception,), {"InnerExceptions": [cancel]})(
+        "aggregate"
+    )
     wrapped = wrap_scan_exception(exc)
 
     assert isinstance(wrapped, ScanCancelledError)
@@ -71,7 +73,9 @@ def test_aggregate_with_cancellation_is_unwrapped_to_cancelled() -> None:
 
 def test_aggregate_with_device_error_is_unwrapped() -> None:
     device = _make_exc("DeviceNotFoundException", "missing")
-    exc = type("AggregateException", (Exception,), {"InnerExceptions": [device]})("aggregate")
+    exc = type("AggregateException", (Exception,), {"InnerExceptions": [device]})(
+        "aggregate"
+    )
     wrapped = wrap_scan_exception(exc)
 
     assert isinstance(wrapped, DeviceNotFoundError)
@@ -80,7 +84,9 @@ def test_aggregate_with_device_error_is_unwrapped() -> None:
 def test_aggregate_with_mixed_cancellation_and_device_error_is_unwrapped() -> None:
     cancel = _make_exc("TaskCanceledException", "cancelled")
     device = _make_exc("DeviceNotFoundException", "missing")
-    exc = type("AggregateException", (Exception,), {"InnerExceptions": [cancel, device]})("aggregate")
+    exc = type(
+        "AggregateException", (Exception,), {"InnerExceptions": [cancel, device]}
+    )("aggregate")
     wrapped = wrap_scan_exception(exc)
 
     assert isinstance(wrapped, DeviceNotFoundError)
@@ -88,7 +94,9 @@ def test_aggregate_with_mixed_cancellation_and_device_error_is_unwrapped() -> No
 
 def test_target_invocation_is_unwrapped() -> None:
     inner = _make_exc("DeviceOfflineException", "offline")
-    exc = type("TargetInvocationException", (Exception,), {"InnerException": inner})("wrapper")
+    exc = type("TargetInvocationException", (Exception,), {"InnerException": inner})(
+        "wrapper"
+    )
     wrapped = wrap_scan_exception(exc)
 
     assert isinstance(wrapped, DeviceOfflineError)
