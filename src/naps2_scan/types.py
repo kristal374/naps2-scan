@@ -51,6 +51,8 @@ class ScanDevice(NAPS2BaseModel):
     @field_validator("driver", mode="before")
     @classmethod
     def parse_driver(cls, value):
+        if isinstance(value, Driver):
+            return value
         return Driver(value.lower())
 
 

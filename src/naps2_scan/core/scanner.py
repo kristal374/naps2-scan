@@ -42,13 +42,12 @@ class CoreScanner:
         return self
 
     def close(self) -> None:
-        self.worker.stop()
+        self.worker.delete()
 
     def capabilities(self) -> ScannerCapabilities:
-        with self.worker as worker:
-            result = asyncio.run(
-                worker.get_capabilities(device=self.device)
-            )
+        result = asyncio.run(
+            self.worker.get_capabilities(device=self.device)
+        )
         return result
 
     def scan(
@@ -81,17 +80,16 @@ class CoreScanner:
             brightness_contrast_after_scan=brightness_contrast_after_scan,
             use_native_ui=use_native_ui,
         )
-        with self.worker as worker:
-            for image in worker.scan(
-                    device=self.device,
-                    options=user_options,
-                    on_scan_start=on_scan_start,
-                    on_scan_end=on_scan_end,
-                    on_page_start=on_page_start,
-                    on_page_progress=on_page_progress,
-                    on_page_end=on_page_end,
-            ):
-                yield image
+        for image in self.worker.scan(
+                device=self.device,
+                options=user_options,
+                on_scan_start=on_scan_start,
+                on_scan_end=on_scan_end,
+                on_page_start=on_page_start,
+                on_page_progress=on_page_progress,
+                on_page_end=on_page_end,
+        ):
+            yield image
 
     def stop(self) -> None:
         self.worker.stop()

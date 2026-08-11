@@ -94,6 +94,3 @@ class Scanner:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.close()
-
-    def __del__(self) -> None:
-        self._core.close()
