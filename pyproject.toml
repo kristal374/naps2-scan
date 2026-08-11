@@ -27,7 +27,7 @@ packages = ["naps2_scan", "naps2_scan.core", "naps2_scan.asyncio", "naps2_scan.s
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
-    "setuptools>=61.0",
+    "setuptools>=83.0",
 ]
 
 [tool.pytest.ini_options]
