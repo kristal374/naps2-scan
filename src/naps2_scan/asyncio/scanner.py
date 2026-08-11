@@ -9,7 +9,6 @@ from ..core.scanner import CoreScanner, list_devices as core_list_devices
 from ..types import (
     PageCallback,
     ProgressCallback,
-    PageStartCallback,
     StartCallback,
     OptionalArg,
     UNSET_VALUE,
@@ -65,7 +64,7 @@ class AsyncScanner:
 
             on_scan_start: Optional[StartCallback] = None,
             on_scan_end: Optional[StartCallback] = None,
-            on_page_start: Optional[PageStartCallback] = None,
+            on_page_start: Optional[PageCallback] = None,
             on_page_progress: Optional[ProgressCallback] = None,
             on_page_end: Optional[PageCallback] = None,
 

@@ -8,7 +8,7 @@ from PIL import Image
 from .worker import APIWorker
 from ..enums import ColorMode, Driver, PaperSource
 from ..types import PageSize, ScannerCapabilities, ScanDevice, ScanOptions, DPI, UNSET_VALUE, OptionalArg, \
-    StartCallback, PageStartCallback, ProgressCallback, PageCallback
+    StartCallback, ProgressCallback, PageCallback
 
 
 def list_devices(
@@ -64,7 +64,7 @@ class CoreScanner:
 
             on_scan_start: Optional[StartCallback] = None,
             on_scan_end: Optional[StartCallback] = None,
-            on_page_start: Optional[PageStartCallback] = None,
+            on_page_start: Optional[PageCallback] = None,
             on_page_progress: Optional[ProgressCallback] = None,
             on_page_end: Optional[PageCallback] = None,
 

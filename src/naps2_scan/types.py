@@ -13,15 +13,11 @@ ARGUMENTS = TypeVar("ARGUMENTS")
 OptionalArg: TypeAlias = ARGUMENTS | object
 
 StartCallback = Callable[[], None]
-PageStartCallback = Callable[[int], None]
+PageCallback = Callable[[int], None]
 
 
 class ProgressCallback(Protocol):
-    def __call__(self, page_number: int, progress: float) -> None: ...
-
-
-class PageCallback(Protocol):
-    def __call__(self, page_number: int) -> None: ...
+    def __call__(self, page_number: int, progress: float, /) -> None: ...
 
 
 class NAPS2BaseModel(BaseModel):
