@@ -86,15 +86,8 @@ internal static class Converters
     public static PageSize ParsePageSize(string value)
     {
         var trimmed = value.Trim();
-        try
-        {
-            var parsed = PageSize.Parse(trimmed);
-            return parsed ?? throw new ArgumentException($"Invalid page size: {value}", nameof(value));
-        }
-        catch (Exception ex)
-        {
-            throw new ArgumentException($"Invalid page size: {value}", nameof(value), ex);
-        }
+        var parsed = PageSize.Parse(trimmed);
+        return parsed ?? throw new ArgumentException($"Invalid page size: {value}", nameof(value));
     }
 
     public static ScannerCapabilitiesDto ToCapabilitiesDto(ScanCaps caps)

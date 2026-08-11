@@ -17,7 +17,7 @@ public static class Bridge
 
     public static void Initialize()
     {
-        if (_scanningContext != null) return;
+        if (_controller != null) return;
 
         _scanningContext = new ScanningContext(new ImageSharpImageContext());
 
@@ -52,8 +52,8 @@ public static class Bridge
         EnsureInitialized();
         using var cts = timeoutMilliseconds > 0
             ? new CancellationTokenSource(timeoutMilliseconds)
-            : new CancellationTokenSource();
-        var cancellationToken = cts.Token;
+            : null;
+        var cancellationToken = timeoutMilliseconds > 0 ? cts!.Token : CancellationToken.None;
 
         var driver = Converters.ParseDriver(driverName);
         var devices = new List<ScanDevice>();

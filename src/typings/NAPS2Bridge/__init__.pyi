@@ -4,7 +4,7 @@ from typing import Any, TypedDict
 class Devices(TypedDict):
     Driver: str
     Id: str
-    Name: str | None
+    Name: str
     IconUri: str | None
     ConnectionUri: str | None
 
@@ -21,7 +21,7 @@ class Bridge:
     @staticmethod
     def Shutdown() -> None: ...
     @staticmethod
-    def GetDevicesAsync(driver: Any, timeout: float) -> Awaitable[str]: ...
+    def GetDevicesAsync(driver: Any, timeout: int) -> Awaitable[str]: ...
     @staticmethod
     def GetCapabilitiesAsync(device: Any) -> Awaitable[str]: ...
     @staticmethod
