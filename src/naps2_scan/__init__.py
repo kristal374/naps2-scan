@@ -4,7 +4,6 @@ from .asyncio.scanner import AsyncScanner, async_list_devices
 from .enums import (
     ColorMode,
     Driver,
-    ImageFormat,
     PageSizeName,
     PageSizeUnit,
     PaperSource,
@@ -50,7 +49,6 @@ __all__ = [
     "Driver",
     "ColorMode",
     "PaperSource",
-    "ImageFormat",
     "DPI",
     "ScannerError",
     "DeviceOfflineError",

@@ -31,14 +31,6 @@ class PaperSource(Enum):
         return self.name
 
 
-class ImageFormat(Enum):
-    PNG = "png"
-    JPEG = "jpeg"
-
-    def __repr__(self):
-        return self.name
-
-
 class PageSizeUnit(Enum):
     MM = "mm"
     CM = "cm"
