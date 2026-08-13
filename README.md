@@ -1,10 +1,10 @@
 # naps2-scan
 
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)](https://github.com/kristal374/naps2-scan)
+[![Coverage](https://codecov.io/gh/kristal374/naps2_bridge/branch/main/graph/badge.svg)](https://codecov.io/gh/kristal374/naps2_bridge)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230.svg)](https://github.com/astral-sh/ruff)
 [![Mypy](https://img.shields.io/badge/type-mypy-df5f00.svg)](https://mypy-lang.org/)
-[![CI](https://github.com/kristal374/naps2-scan/actions/workflows/ci.yml/badge.svg)](https://github.com/kristal374/naps2-scan/actions/workflows/ci.yml)
+[![CI](https://github.com/kristal374/naps2_bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/kristal374/naps2_bridge/actions/workflows/ci.yml)
 
 Python wrapper over [NAPS2.Sdk](https://www.naps2.com/) via [pythonnet](https://github.com/pythonnet/pythonnet).  
 Cross-platform scanner discovery and image acquisition on **Windows**, **macOS**, and **Linux**.
@@ -49,7 +49,7 @@ asyncio.run(main())
 ## Development
 
 ```bash
-git clone https://github.com/kristal374/naps2-scan
+git clone https://github.com/kristal374/naps2_bridge
 cd naps2-scan
 uv sync
 ```

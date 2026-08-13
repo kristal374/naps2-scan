@@ -59,7 +59,7 @@ dev = [
 markers = [
     "real_scanner: test that requires a connected physical scanner",
 ]
-addopts = "--cov=src/naps2_scan --cov-report=term-missing --cov-report=html"
+addopts = "--cov=src/naps2_scan --cov-report=term-missing --cov-report=html --cov-report=xml"
 
 [tool.coverage.run]
 source = ["src/naps2_scan"]
