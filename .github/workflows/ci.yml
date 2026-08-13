@@ -33,11 +33,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
 
       - run: uv sync
+
+      - name: Build native binaries
+        run: |
+          dotnet publish src/naps2_scan/native/NAPS2Bridge.csproj \
+            -c Release -r linux-x64 -f net8.0 --self-contained false /nologo
+          mkdir -p src/naps2_scan/core/native_bin
+          cp -r src/naps2_scan/native/bin/Release/net8.0/linux-x64/publish/. src/naps2_scan/core/native_bin/
 
       - name: Run unit tests
         run: uv run pytest tests/ -q --ignore=tests/test_real_scanner.py

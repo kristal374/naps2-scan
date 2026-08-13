@@ -12,6 +12,7 @@ from pathlib import Path
 from setuptools import setup
 from setuptools.command.bdist_wheel import bdist_wheel
 from setuptools.command.build_py import build_py
+from setuptools.command.editable_wheel import editable_wheel
 from setuptools.logging import configure
 
 logger = logging.getLogger(__name__)
@@ -128,7 +129,7 @@ def publish_native(rid: str, dotnet_exe: str) -> Path:
     ]
     logger.info("Building native core for %s (TFM %s): %s", rid, tfm, " ".join(args))
 
-    result = subprocess.run(args, cwd=ROOT)
+    result = subprocess.run(args, cwd=ROOT, check=False)
     if result.returncode != 0:
         raise NativeBuildError(_publish_failure_message(rid, tfm, result.returncode))
 
@@ -220,9 +221,29 @@ class BdistWheelWithNative(bdist_wheel):
         return python, "none", plat
 
 
+class EditableWheelWithNative(editable_wheel):
+    def run(self) -> None:
+        if os.environ.get("NAPS2_SCAN_SKIP_NATIVE_BUILD") == "1":
+            logger.warning(
+                "NAPS2_SCAN_SKIP_NATIVE_BUILD=1 set — skipping native build. "
+                "The package will fail at import time without native_bin."
+            )
+            super().run()
+            return
+
+        publish_dir = publish_native(resolve_rid(), find_dotnet())
+        # Editable installs reference the source tree, so the binaries
+        # must live next to the source package, not in build_lib.
+        src_root = ROOT / "src"
+        sync_native_binaries(publish_dir, src_root)
+        create_config(src_root)
+        super().run()
+
+
 setup(
     cmdclass={
         "build_py": BuildPyWithNative,
         "bdist_wheel": BdistWheelWithNative,
+        "editable_wheel": EditableWheelWithNative,
     }
 )
