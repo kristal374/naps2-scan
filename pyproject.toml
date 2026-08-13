@@ -1,6 +1,6 @@
 [project]
 name = "naps2-scan"
-version = "0.1.1"
+version = "0.1.2"
 description = "Python wrapper over NAPS2.Sdk via pythonnet"
 readme = "README.md"
 requires-python = ">=3.12"

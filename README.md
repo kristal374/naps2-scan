@@ -15,12 +15,19 @@ Cross-platform scanner discovery and image acquisition on **Windows**, **macOS**
 pip install naps2-scan
 ```
 
-> Requires .NET 8 SDK for building the native component during installation.  
+> Requires the **.NET 8 Runtime** (or newer) installed on the target machine.
+> The prebuilt wheels ship the `NAPS2Bridge.dll` and its dependencies, but the
+> .NET runtime itself is not bundled (framework-dependent).
+> Download it from <https://dotnet.microsoft.com/download/dotnet/8.0>
+> (the ".NET Runtime", not the SDK).
+>
+> Building from source (sdist) additionally requires the **.NET 8 SDK** and
+> `dotnet publish` to compile `NAPS2Bridge.dll`.
 
 ## Quick Start
 
 ```python
-from naps2_scan import Scanner, list_devices, ScanOptions, ColorMode
+from naps2_scan import Scanner, list_devices, ColorMode
 
 devices = list_devices()
 for d in devices:
@@ -35,7 +42,7 @@ with Scanner(devices[0]) as scanner:
 
 ```python
 import asyncio
-from naps2_scan import AsyncScanner, async_list_devices, ScanOptions
+from naps2_scan import AsyncScanner, async_list_devices
 
 async def main():
     devices = await async_list_devices()

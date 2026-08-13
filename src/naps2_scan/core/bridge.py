@@ -17,7 +17,16 @@ if not NATIVE_BIN_DIR.exists():
         "The package was built without native binaries."
     )
 
-pythonnet.load("coreclr", runtime_config=str(NATIVE_BIN_CONFIG))
+try:
+    pythonnet.load("coreclr", runtime_config=str(NATIVE_BIN_CONFIG))
+except RuntimeError as exc:
+    raise RuntimeError(
+        "naps2_scan requires the .NET 8 runtime (or newer) to be installed "
+        "on this machine, but it could not be located.\n"
+        "Download and install the .NET 8 Runtime from "
+        "https://dotnet.microsoft.com/download/dotnet/8.0 "
+        '(the plain ".NET Runtime", not the SDK).'
+    ) from exc
 
 import clr  # noqa: E402
 
