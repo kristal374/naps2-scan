@@ -27,7 +27,7 @@ for d in devices:
     print(f"{d.name} ({d.driver})")
 
 with Scanner(devices[0]) as scanner:
-    for i, img in enumerate(scanner.scan(options=ScanOptions(dpi=300, color_mode=ColorMode.COLOR)), 1):
+    for i, img in enumerate(scanner.scan(dpi=300, color_mode=ColorMode.COLOR), 1):
         img.save(f"page_{i}.png")
 ```
 
@@ -40,7 +40,7 @@ from naps2_scan import AsyncScanner, async_list_devices, ScanOptions
 async def main():
     devices = await async_list_devices()
     async with AsyncScanner(devices[0]) as scanner:
-        async for img in scanner.scan(options=ScanOptions(dpi=150)):
+        async for img in scanner.scan(dpi=150):
             print(img.width, img.height)
 
 asyncio.run(main())

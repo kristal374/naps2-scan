@@ -118,7 +118,7 @@ class APIWorker:
             )
 
         def worker() -> None:
-            from System import Action, Array, Byte, Double, Int32  # type: ignore[attr-defined]  # noqa
+            from System import Action, Array, Byte, Double, Int32  # type: ignore[attr-defined] # fmt: skip # noqa
 
             options_json = json.dumps(
                 {
