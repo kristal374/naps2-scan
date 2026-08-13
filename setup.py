@@ -195,16 +195,16 @@ class BdistWheelWithNative(bdist_wheel):
         self.root_is_pure = False
 
     def get_tag(self) -> tuple[str, str, str]:
-        python, _abi, _plat = super().get_tag()
-        plat = {
+        _python, _abi, plat = super().get_tag()
+        target_plat = {
             "win-x64": "win_amd64",
             "win-arm64": "win_arm64",
             "linux-x64": "manylinux_2_17_x86_64",
             "linux-arm64": "manylinux_2_17_aarch64",
             "osx-x64": "macosx_10_15_x86_64",
             "osx-arm64": "macosx_11_0_arm64",
-        }.get(resolve_rid(), _plat)
-        return python, "none", plat
+        }.get(resolve_rid(), plat)
+        return "py3", "none", target_plat
 
 
 class EditableWheelWithNative(editable_wheel):
