@@ -4,11 +4,32 @@ version = "0.1.0"
 description = "Python wrapper over NAPS2.Sdk via pythonnet"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"
+authors = [
+    { name = "kristal", email = "mail.aleks.for.work@gmail.com" },
+]
+keywords = ["scanner", "naps2", "twain", "wia", "sane", "escl", "scanning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics :: Capture :: Scanners",
+]
 dependencies = [
     "pillow>=12.3.0",
     "pydantic>=2.13.4",
     "pythonnet>=3.0.4",
 ]
+
+[project.urls]
+Homepage = "https://github.com/kristal374/naps2_bridge"
+Repository = "https://github.com/kristal374/naps2_bridge"
+Issues = "https://github.com/kristal374/naps2_bridge/issues"
 
 [build-system]
 requires = ["setuptools>=83.0", "wheel"]
