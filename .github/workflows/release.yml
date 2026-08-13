@@ -7,12 +7,22 @@ on:
 
 jobs:
   build-wheels:
-    name: Build wheel (${{ matrix.os }})
+    name: Build wheel (${{ matrix.rid }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-13, macos-14]
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: ubuntu-latest
+            rid: linux-arm64
+          - os: macos-14
+            rid: osx-arm64
+          - os: macos-15-intel
+            rid: osx-x64
     steps:
       - uses: actions/checkout@v4
 
@@ -25,11 +35,13 @@ jobs:
           python-version: "3.12"
 
       - name: Build wheel
+        env:
+          NAPS2_SCAN_RID: ${{ matrix.rid }}
         run: uv build
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels-${{ matrix.rid }}
           path: dist/*.whl
 
   publish:
