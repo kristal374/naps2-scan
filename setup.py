@@ -196,6 +196,11 @@ class BdistWheelWithNative(bdist_wheel):
 
     def get_tag(self) -> tuple[str, str, str]:
         python, _abi, plat = super().get_tag()
+        rid = resolve_rid()
+        if rid == "osx-arm64":
+            plat = "macosx_11_0_arm64"
+        elif rid == "osx-x64":
+            plat = "macosx_10_15_x86_64"
         return python, "none", plat
 
 
