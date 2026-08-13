@@ -25,7 +25,6 @@ NATIVE_BIN_DIRNAME = "native_bin"
 
 CONFIGURATION = "Release"
 TARGET_FRAMEWORK_DEFAULT = "net8.0"
-TARGET_FRAMEWORK_MACOS = os.environ.get("NAPS2_SCAN_MACOS_TFM", "net8.0-macos13.0")
 
 RID_TABLE = {
     "win32": {"default": "win-x64", "arm": "win-arm64"},
@@ -78,19 +77,7 @@ def find_dotnet() -> str:
 
 
 def target_framework_for(rid: str) -> str:
-    if rid.startswith("osx"):
-        return TARGET_FRAMEWORK_MACOS
     return TARGET_FRAMEWORK_DEFAULT
-
-
-def ensure_macos_build_host(rid: str) -> None:
-    if rid.startswith("osx") and sys.platform != "darwin":
-        raise NativeBuildError(
-            f"Cannot build native binaries for {rid} on {sys.platform!r}. "
-            f"macOS builds require TFM {TARGET_FRAMEWORK_MACOS} (Driver.Apple) "
-            "and must be run on a macOS host with the .NET 8 SDK and macOS "
-            "workload installed (dotnet workload install macOS)."
-        )
 
 
 def publish_dir_for(rid: str) -> Path:
@@ -101,8 +88,6 @@ def publish_dir_for(rid: str) -> Path:
 def publish_native(rid: str, dotnet_exe: str) -> Path:
     if not NATIVE_PROJECT.exists():
         raise NativeBuildError(f"Native project not found: {NATIVE_PROJECT}")
-
-    ensure_macos_build_host(rid)
 
     out_dir = publish_dir_for(rid)
     if out_dir.exists() and os.environ.get("NAPS2_SCAN_FORCE_REBUILD") != "1":
@@ -177,19 +162,12 @@ def create_config(build_lib: Path) -> None:
 
 
 def _publish_failure_message(rid: str, tfm: str, exit_code: int) -> str:
-    macos_hint = ""
-    if rid.startswith("osx"):
-        macos_hint = (
-            f"\nmacOS builds require TFM {TARGET_FRAMEWORK_MACOS} (Driver.Apple) and "
-            "must be run on macOS with the macOS .NET workload installed "
-            "(dotnet workload install macOS)."
-        )
     return (
         f"`dotnet publish` failed with exit code {exit_code}. "
         "See the dotnet/NuGet/MSBuild output above for the actual cause "
         "(common culprits: missing .NET 8 SDK, no network access to "
         "NuGet, or a PackageReference that isn't compatible with this "
-        f"RID: {rid}, TFM: {tfm}).{macos_hint}"
+        f"RID: {rid}, TFM: {tfm})."
     )
 
 
